@@ -1,0 +1,8 @@
+{
+    "<path>": {
+        "comment": "...",
+        "source": "<user>@<hostname>",
+        "excludes": [],
+        "destinations": ["<hostname>"]
+    }
+}
