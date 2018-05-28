@@ -1,8 +1,10 @@
 {
-    "<path>": {
-        "comment": "...",
-        "source": "<user>@<hostname>",
-        "excludes": [],
-        "destinations": ["<hostname>"]
-    }
+	"mirrors": {
+		"<path>": {
+			"comment": "...",
+			"source": "<user>@<hostname>",
+			"excludes": [],
+			"destinations": ["<hostname>"]
+		}
+	}
 }

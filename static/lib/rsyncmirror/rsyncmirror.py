@@ -118,12 +118,11 @@ if __name__ == "__main__":
 
     try:
         conf = json.load(open(confpath))
+        mirrorsd = conf.get("mirrors")
     except:
         #traceback.print_exc()
-        sys.stderr.write("error: cannot open configuration file\n")
+        sys.stderr.write("error: bad/missing configuration file\n")
         sys.exit(1)
-
-    mirrorsd = conf
 
     if showlist:
         for path in sorted(mirrorsd.keys()):
