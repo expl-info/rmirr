@@ -124,13 +124,15 @@ def whoami():
 def print_usage():
     d = { "progname": os.path.basename(sys.argv[0]) }
     print """\
-usage: %(progname)s [<options>] -p <path>
+usage: %(progname)s [<options>] (-p <path> | -s <suitename>)
 
 Mirror file objects at <path>.
 
 Where:
 -p <path>
         Mirror path.
+-s <suitename>
+        Mirror all paths belonging to a suite.
 
 Options:
 -c <path>
@@ -147,8 +149,7 @@ Options:
 -l      List mirrorable paths.
 --verbose
         Enable verbosity.
--y      Do not ask for confirmation before executing.
-""" % d
+-y      Do not ask for confirmation before executing.""" % d
 
 if __name__ == "__main__":
     progpath = os.path.realpath(sys.argv[0])
@@ -168,6 +169,7 @@ if __name__ == "__main__":
         dryrsync = False
         mirrorpath = None
         showlist = False
+        suitename = None
         verbose = False
         yes = False
 
@@ -192,6 +194,8 @@ if __name__ == "__main__":
                 showlist = True
             elif arg == "-p" and args:
                 mirrorpath = os.path.realpath(args.pop(0))
+            elif arg == "-s" and args:
+                suitename = args.pop(0)
             elif arg == "--verbose":
                 verbose = True
             elif arg == "-y":
@@ -211,6 +215,7 @@ if __name__ == "__main__":
     try:
         conf = json.load(open(confpath))
         mirrorsd = conf.get("mirrors")
+        suitesd = conf.get("suites", {})
     except:
         #traceback.print_exc()
         sys.stderr.write("error: bad/missing configuration file\n")
@@ -221,5 +226,9 @@ if __name__ == "__main__":
             print "path:         %s" % (path,)
             print "destinations: %s" % (", ".join(mirrorsd[path].get("destinations",[])))
             print
+    elif suitename:
+        paths = suitesd.get(suitename)
+        for path in paths:
+            do_mirror(path, mirrorsd)
     else:
         do_mirror(path, mirrorsd)
