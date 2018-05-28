@@ -71,7 +71,7 @@ if __name__ == "__main__":
     try:
         args = sys.argv[1:]
 
-        confpath = os.path.join(etcdir, "paths.json")
+        confpath = os.path.join(etcdir, "rsyncmirror.json")
         debug = False
         allowdelete = False
         destinations = None
