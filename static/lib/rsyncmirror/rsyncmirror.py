@@ -39,9 +39,13 @@ def whoami():
 def print_usage():
     d = { "progname": os.path.basename(sys.argv[0]) }
     print """\
-usage: %(progname)s [<options>] <path>
+usage: %(progname)s [<options>] -p <path>
 
-Mirror tree at <path>.
+Mirror file objects at <path>.
+
+Where:
+-p <path>
+        Mirror path.
 
 Options:
 -c <path>
@@ -101,14 +105,17 @@ if __name__ == "__main__":
                 dryrsync = True
             elif arg == "-l":
                 showlist = True
+            elif arg == "-p" and args:
+                mirrorpath = os.path.realpath(args.pop(0))
             elif arg == "--verbose":
                 verbose = True
             elif arg == "-y":
                 yes = True
-            elif not args:
-                mirrorpath = os.path.realpath(arg)
             else:
                 raise Exception()
+
+        if not mirrorpath:
+            raise Exception()
     except SystemExit:
         raise
     except:
