@@ -30,6 +30,91 @@ import subprocess
 import sys
 import traceback
 
+def do_mirror(path, mirrorsd):
+    bestpath = ""
+    for path in mirrorsd:
+        if debug:
+            print "debug: path (%s) mirrorpath (%s) bestpath (%s)" % (path, mirrorpath, bestpath)
+        if mirrorpath.startswith(path):
+            if len(path) > len(bestpath):
+                bestpath = path
+
+    if bestpath == "":
+        sys.stderr.write("error: no match\n")
+        sys.exit(1)
+    else:
+        mirrord = mirrorsd.get(bestpath)
+        if debug:
+            print "debug: bestpath (%s)" % (bestpath,)
+            print "debug: mirrord (%s)" % (mirrord,)
+
+        cmdargs = ["rsync", "-avz"]
+
+        # excludes
+        excludes = mirrord.get("excludes", [])
+        for s in excludes:
+            cmdargs.append("--exclude=%s" % s)
+
+        # delete
+        if allowdelete:
+            cmdargs.append("--delete")
+
+        # dry run
+        if dryrsync:
+            cmdargs.append("--dry-run")
+
+        # validate source
+        relpath = mirrorpath[len(bestpath):]
+        srcuserhost = mirrord["source"]
+        srcuser, srchost = srcuserhost.split("@", 1)
+        if os.path.isdir(mirrorpath):
+            srcpath = "%s/" % (mirrorpath,)
+        srcuserhostpath = "%s@%s:%s" % (thisusername, thishostname, srcpath)
+
+        if thisusername != srcuser:
+            print "warning: you (%s) do not match source user (%s)" % (thisusername, srcuser)
+            reply = raw_input("continue (y/n)? ")
+            if not yes and reply not in ["y"]:
+                sys.exit(1)
+        if thishostname != srchost:
+            print "warning: this host (%s) does not match source host (%s)" % (thishostname, srchost)
+            reply = raw_input("continue (y/n)? ")
+            if not yes and reply not in ["y"]:
+                sys.exit(1)
+        cmdargs.append(srcpath)
+
+        # build dsthostpath (may be multiple)
+        for dstuserhost in mirrord.get("destinations"):
+            if "@" not in dstuserhost:
+                dstuserhost = "%s@%s" % (thisusername, dstuserhost)
+            dstuser, dsthost = dstuserhost.split("@", 1)
+            if destinations and dsthost not in destinations:
+                if verbose:
+                    print "verbose: skipping destination (%s)" % (dsthost,)
+                continue
+
+            xcmdargs = cmdargs[:]
+            dstuserhostpath = "%s@%s:%s" % (dstuser, dsthost, mirrorpath)
+            xcmdargs.append(dstuserhostpath)
+            print "sync from: %s" % (srcuserhostpath,)
+            print "sync to:   %s" % (dstuserhostpath,)
+            print "excludes:  %s" % " ".join(excludes)
+            if debug:
+                print xcmdargs
+            if not yes:
+                reply = raw_input("execute (y/n/q)? ")
+                if reply == "q":
+                    print "quitting"
+                    sys.exit(0)
+                if reply not in ["y"]:
+                    print "aborted"
+                    continue
+            print "running ..."
+            p = subprocess.Popen(xcmdargs, shell=False, close_fds=True)
+            p.wait()
+            if p.returncode != 0:
+                print "warning: non-zero exit value (%s)" % (p.returncode,)
+
 def whoami():
     try:
         return pwd.getpwuid(os.getuid()).pw_name
@@ -137,86 +222,4 @@ if __name__ == "__main__":
             print "destinations: %s" % (", ".join(mirrorsd[path].get("destinations",[])))
             print
     else:
-        bestpath = ""
-        for path in mirrorsd:
-            if debug:
-                print "debug: path (%s) mirrorpath (%s) bestpath (%s)" % (path, mirrorpath, bestpath)
-            if mirrorpath.startswith(path):
-                if len(path) > len(bestpath):
-                    bestpath = path
-
-        if bestpath == "":
-            sys.stderr.write("error: no match\n")
-            sys.exit(1)
-        else:
-            mirrord = mirrorsd.get(bestpath)
-            if debug:
-                print "debug: bestpath (%s)" % (bestpath,)
-                print "debug: mirrord (%s)" % (mirrord,)
-
-            cmdargs = ["rsync", "-avz"]
-
-            # excludes
-            excludes = mirrord.get("excludes", [])
-            for s in excludes:
-                cmdargs.append("--exclude=%s" % s)
-
-            # delete
-            if allowdelete:
-                cmdargs.append("--delete")
-
-            # dry run
-            if dryrsync:
-                cmdargs.append("--dry-run")
-
-            # validate source
-            relpath = mirrorpath[len(bestpath):]
-            srcuserhost = mirrord["source"]
-            srcuser, srchost = srcuserhost.split("@", 1)
-            if os.path.isdir(mirrorpath):
-                srcpath = "%s/" % (mirrorpath,)
-            srcuserhostpath = "%s@%s:%s" % (thisusername, thishostname, srcpath)
-
-            if thisusername != srcuser:
-                print "warning: you (%s) do not match source user (%s)" % (thisusername, srcuser)
-                reply = raw_input("continue (y/n)? ")
-                if not yes and reply not in ["y"]:
-                    sys.exit(1)
-            if thishostname != srchost:
-                print "warning: this host (%s) does not match source host (%s)" % (thishostname, srchost)
-                reply = raw_input("continue (y/n)? ")
-                if not yes and reply not in ["y"]:
-                    sys.exit(1)
-            cmdargs.append(srcpath)
-
-            # build dsthostpath (may be multiple)
-            for dstuserhost in mirrord.get("destinations"):
-                if "@" not in dstuserhost:
-                    dstuserhost = "%s@%s" % (thisusername, dstuserhost)
-                dstuser, dsthost = dstuserhost.split("@", 1)
-                if destinations and dsthost not in destinations:
-                    if verbose:
-                        print "verbose: skipping destination (%s)" % (dsthost,)
-                    continue
-
-                xcmdargs = cmdargs[:]
-                dstuserhostpath = "%s@%s:%s" % (dstuser, dsthost, mirrorpath)
-                xcmdargs.append(dstuserhostpath)
-                print "sync from: %s" % (srcuserhostpath,)
-                print "sync to:   %s" % (dstuserhostpath,)
-                print "excludes:  %s" % " ".join(excludes)
-                if debug:
-                    print xcmdargs
-                if not yes:
-                    reply = raw_input("execute (y/n/q)? ")
-                    if reply == "q":
-                        print "quitting"
-                        sys.exit(0)
-                    if reply not in ["y"]:
-                        print "aborted"
-                        continue
-                print "running ..."
-                p = subprocess.Popen(xcmdargs, shell=False, close_fds=True)
-                p.wait()
-                if p.returncode != 0:
-                    print "warning: non-zero exit value (%s)" % (p.returncode,)
+        do_mirror(path, mirrorsd)
