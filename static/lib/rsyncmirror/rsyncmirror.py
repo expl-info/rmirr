@@ -119,10 +119,13 @@ def do_mirror(mirrorpath, mirrors):
                     print "aborted"
                     continue
             print "running ..."
-            p = subprocess.Popen(xcmdargs, shell=False, close_fds=True)
-            p.wait()
-            if p.returncode != 0:
-                print "warning: non-zero exit value (%s)" % (p.returncode,)
+            if dry:
+                print " ".join(xcmdargs)
+            else:
+                p = subprocess.Popen(xcmdargs, shell=False, close_fds=True)
+                p.wait()
+                if p.returncode != 0:
+                    print "warning: non-zero exit value (%s)" % (p.returncode,)
 
 def whoami():
     try:
