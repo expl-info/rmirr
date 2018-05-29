@@ -36,7 +36,7 @@ def do_mirror(mirrorpath, mirrors):
     for mirrord in mirrors:
         srcuserhostpath = mirrord["source"]
         _, srcpath = srcuserhostpath.split(":", 1)
-        if mirrorpath.startswith(srcpath):
+        if mirrorpath == srcpath or mirrorpath.startswith(srcpath+"/"):
             if len(srcpath) > len(bestsrcpath):
                 bestsrcpath = srcpath
                 bestmirrord = mirrord
