@@ -31,18 +31,7 @@ import sys
 import traceback
 
 def do_mirror(mirrorpath, mirrors):
-    bestmirror = None
-    bestsrcpath = ""
-    for mirrord in mirrors:
-        srcuserhostpath = mirrord["source"]
-        _, _, srcpath = srcuserhostpath
-        if mirrorpath == srcpath or mirrorpath.startswith(srcpath+"/"):
-            if len(srcpath) > len(bestsrcpath):
-                bestsrcpath = srcpath
-                bestmirrord = mirrord
-        if debug:
-            print "debug: mirrorpath (%s) srcpath (%s) bestsrcpath (%s)" % (mirrorpath, srcpath, bestsrcpath)
-
+    bestsrcpath, bestmirrord = find_mirror(mirrorpath, mirrors)
     if bestsrcpath == "":
         sys.stderr.write("error: no match\n")
         sys.exit(1)
@@ -126,6 +115,20 @@ def do_mirror(mirrorpath, mirrors):
                 p.wait()
                 if p.returncode != 0:
                     print "warning: non-zero exit value (%s)" % (p.returncode,)
+
+def find_mirror(mirrorpath, mirrors):
+    bestmirrord = None
+    bestsrcpath = ""
+    for mirrord in mirrors:
+        srcuserhostpath = mirrord["source"]
+        _, _, srcpath = split_userhostpath(srcuserhostpath)
+        if mirrorpath == srcpath or mirrorpath.startswith(srcpath+"/"):
+            if len(srcpath) > len(bestsrcpath):
+                bestsrcpath = srcpath
+                bestmirrord = mirrord
+        if debug:
+            print "debug: mirrorpath (%s) srcpath (%s) bestsrcpath (%s)" % (mirrorpath, srcpath, bestsrcpath)
+    return bestsrcpath, bestmirrord
 
 def split_userhostpath(s):
     if "@" in userhostpath:
