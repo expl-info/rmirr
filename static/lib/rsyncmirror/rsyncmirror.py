@@ -35,7 +35,7 @@ def do_mirror(mirrorpath, mirrors):
     bestsrcpath = ""
     for mirrord in mirrors:
         srcuserhostpath = mirrord["source"]
-        _, srcpath = srcuserhostpath.split(":", 1)
+        _, _, srcpath = srcuserhostpath
         if mirrorpath == srcpath or mirrorpath.startswith(srcpath+"/"):
             if len(srcpath) > len(bestsrcpath):
                 bestsrcpath = srcpath
@@ -69,8 +69,7 @@ def do_mirror(mirrorpath, mirrors):
         # validate source
         relpath = mirrorpath[len(bestsrcpath):]
         srcuserhostpath = bestmirrord["source"]
-        srcuser, srchost = srcuserhostpath.split("@", 1)
-        srchost, _ = srchost.split(":", 1)
+        srcuser, srchost, srcpath = split_userhostpath(srcuserhostpath)
 
         srcpath = mirrorpath
         if os.path.isdir(mirrorpath):
@@ -94,9 +93,10 @@ def do_mirror(mirrorpath, mirrors):
 
         # build dsthostpath (may be multiple)
         for dstuserhost in bestmirrord.get("destinations"):
-            if "@" not in dstuserhost:
+            dstuser, dsthost, dstpath = split_userhostpath(dstuserhost)
+            if dstuser == None:
                 dstuserhost = "%s@%s" % (thisusername, dstuserhost)
-            dstuser, dsthost = dstuserhost.split("@", 1)
+            dstuser, dsthost, dstpath = split_userhostpath(dstuserhost)
             if destinations and dsthost not in destinations:
                 if verbose:
                     print "verbose: skipping destination (%s)" % (dsthost,)
@@ -126,6 +126,17 @@ def do_mirror(mirrorpath, mirrors):
                 p.wait()
                 if p.returncode != 0:
                     print "warning: non-zero exit value (%s)" % (p.returncode,)
+
+def split_userhostpath(s):
+    if "@" in userhostpath:
+        user, rest = userhostpath.split("@", 1)
+    else:
+        user, rest = None, userhostpath
+    if ":" in rest:
+        host, path = rest.split(":", 1)
+    else:
+        host, path = rest, None
+    return user, host, path
 
 def whoami():
     try:
