@@ -99,6 +99,7 @@ def do_mirror(mirrorpath, mirrors):
             xcmdargs = cmdargs[:]
             dstuserhostpath = "%s@%s:%s" % (dstuser, dsthost, dstpath)
             xcmdargs.append(dstuserhostpath)
+            print "comment:   %s" % bestmirrord.get("comment", "")
             print "sync from: %s" % (srcuserhostpath,)
             print "sync to:   %s" % (dstuserhostpath,)
             print "excludes:  %s" % " ".join(excludes)
