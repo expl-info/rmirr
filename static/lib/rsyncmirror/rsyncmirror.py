@@ -30,28 +30,31 @@ import subprocess
 import sys
 import traceback
 
-def do_mirror(path, mirrorsd):
-    bestpath = ""
-    for path in mirrorsd:
+def do_mirror(mirrorpath, mirrors):
+    bestmirror = None
+    bestsrcpath = ""
+    for mirrord in mirrors:
+        srcuserhostpath = mirrord["source"]
+        _, srcpath = srcuserhostpath.split(":", 1)
+        if mirrorpath.startswith(srcpath):
+            if len(srcpath) > len(bestsrcpath):
+                bestsrcpath = srcpath
+                bestmirrord = mirrord
         if debug:
-            print "debug: path (%s) mirrorpath (%s) bestpath (%s)" % (path, mirrorpath, bestpath)
-        if mirrorpath.startswith(path):
-            if len(path) > len(bestpath):
-                bestpath = path
+            print "debug: mirrorpath (%s) srcpath (%s) bestsrcpath (%s)" % (mirrorpath, srcpath, bestsrcpath)
 
-    if bestpath == "":
+    if bestsrcpath == "":
         sys.stderr.write("error: no match\n")
         sys.exit(1)
     else:
-        mirrord = mirrorsd.get(bestpath)
         if debug:
-            print "debug: bestpath (%s)" % (bestpath,)
-            print "debug: mirrord (%s)" % (mirrord,)
+            print "debug: bestsrcpath (%s)" % (bestsrcpath,)
+            print "debug: bestmirrord (%s)" % (bestmirrord,)
 
         cmdargs = ["rsync", "-avz"]
 
         # excludes
-        excludes = mirrord.get("excludes", [])
+        excludes = bestmirrord.get("excludes", [])
         for s in excludes:
             cmdargs.append("--exclude=%s" % s)
 
@@ -64,12 +67,17 @@ def do_mirror(path, mirrorsd):
             cmdargs.append("--dry-run")
 
         # validate source
-        relpath = mirrorpath[len(bestpath):]
-        srcuserhost = mirrord["source"]
-        srcuser, srchost = srcuserhost.split("@", 1)
+        relpath = mirrorpath[len(bestsrcpath):]
+        srcuserhostpath = bestmirrord["source"]
+        srcuser, srchost = srcuserhostpath.split("@", 1)
+        srchost, _ = srchost.split(":", 1)
+
+        srcpath = mirrorpath
         if os.path.isdir(mirrorpath):
-            srcpath = "%s/" % (mirrorpath,)
+            srcpath += "/"
         srcuserhostpath = "%s@%s:%s" % (thisusername, thishostname, srcpath)
+        if debug:
+            print "debug: new srcuserhostpath (%s)" % (srcuserhostpath,)
 
         if thisusername != srcuser:
             print "warning: you (%s) do not match source user (%s)" % (thisusername, srcuser)
@@ -81,10 +89,11 @@ def do_mirror(path, mirrorsd):
             reply = raw_input("continue (y/n)? ")
             if not yes and reply not in ["y"]:
                 sys.exit(1)
+        # use only srcpath part
         cmdargs.append(srcpath)
 
         # build dsthostpath (may be multiple)
-        for dstuserhost in mirrord.get("destinations"):
+        for dstuserhost in bestmirrord.get("destinations"):
             if "@" not in dstuserhost:
                 dstuserhost = "%s@%s" % (thisusername, dstuserhost)
             dstuser, dsthost = dstuserhost.split("@", 1)
@@ -214,7 +223,7 @@ if __name__ == "__main__":
 
     try:
         conf = json.load(open(confpath))
-        mirrorsd = conf.get("mirrors")
+        mirrors = conf.get("mirrors")
         suitesd = conf.get("suites", {})
     except:
         #traceback.print_exc()
@@ -222,13 +231,13 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if showlist:
-        for path in sorted(mirrorsd.keys()):
-            print "path:         %s" % (path,)
-            print "destinations: %s" % (", ".join(mirrorsd[path].get("destinations",[])))
+        for mirrord in sorted(mirrors):
+            print "source:       %s" % (mirrord.get("source"),)
+            print "destinations: %s" % (", ".join(mirrord.get("destinations",[])))
             print
     elif suitename:
         paths = suitesd.get(suitename)
         for path in paths:
-            do_mirror(path, mirrorsd)
+            do_mirror(path, mirrors)
     else:
-        do_mirror(path, mirrorsd)
+        do_mirror(mirrorpath, mirrors)

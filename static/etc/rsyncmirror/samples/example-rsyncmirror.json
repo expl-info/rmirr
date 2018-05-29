@@ -1,22 +1,23 @@
 {
-	"mirrors": {
-		"/data/main": {
-			"comment": "home -> finance, hr",
-			"source": "ssm@home.abc.xyz",
+	"mirrors": [
+		{
+			"comment": "data home -> finance, hr",
+			"source": "ssm@home.abc.xyz:/data/main",
 			"excludes": [".snapshot", ".snapshots"],
 			"destinations": ["finance.abc.xyz", "hr.abc.xyz"]
 		},
-		"/data/finance": {
-			"comment": "home -> finance",
-			"source": "data@home.abc.xyz",
+		{
+			"comment": "data home -> finance",
+			"source": "data@home.abc.xyz:/data/finance",
 			"excludes": [".snapshot", ".snapshots"],
 			"destinations": ["finance.abc.xyz"]
 		},
-		"/data/hr": {
-			"comment": "home -> hr",
-			"source": "data@home.abc.xyz",
+		{
+			"comment": "data home -> hr",
+			"paths": ["/data/hr"],
+			"source": "data@home.abc.xyz:/data/hr",
 			"excludes": [".snapshot", ".snapshots"],
 			"destinations": ["hr.abc.xyz"]
 		}
-	}
+	]
 }
