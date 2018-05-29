@@ -56,7 +56,7 @@ def do_mirror(mirrorpath, mirrors):
             cmdargs.append("--dry-run")
 
         # validate source
-        relpath = mirrorpath[len(bestsrcpath):]
+        relpath = mirrorpath[len(bestsrcpath)+1:]
         srcuserhostpath = bestmirrord["source"]
         srcuser, srchost, srcpath = split_userhostpath(srcuserhostpath)
 
@@ -86,13 +86,18 @@ def do_mirror(mirrorpath, mirrors):
             if dstuser == None:
                 dstuserhost = "%s@%s" % (thisusername, dstuserhost)
             dstuser, dsthost, dstpath = split_userhostpath(dstuserhost)
+            if dstpath == None:
+                dstpath = mirrorpath
+            else:
+                if relpath:
+                    dstpath = os.path.join(dstpath, relpath)
             if destinations and dsthost not in destinations:
                 if verbose:
                     print "verbose: skipping destination (%s)" % (dsthost,)
                 continue
 
             xcmdargs = cmdargs[:]
-            dstuserhostpath = "%s@%s:%s" % (dstuser, dsthost, mirrorpath)
+            dstuserhostpath = "%s@%s:%s" % (dstuser, dsthost, dstpath)
             xcmdargs.append(dstuserhostpath)
             print "sync from: %s" % (srcuserhostpath,)
             print "sync to:   %s" % (dstuserhostpath,)
