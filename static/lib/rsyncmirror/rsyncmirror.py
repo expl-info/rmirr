@@ -265,7 +265,7 @@ if __name__ == "__main__":
             elif arg == "-l":
                 showlist = True
             elif arg == "-p" and args:
-                mirrorpath = os.path.realpath(args.pop(0))
+                mirrorpath = os.path.normpath(args.pop(0))
             elif arg == "-s" and args:
                 suitename = args.pop(0)
             elif arg == "--safeoff":
