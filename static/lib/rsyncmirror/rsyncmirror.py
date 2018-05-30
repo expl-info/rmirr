@@ -232,7 +232,7 @@ if __name__ == "__main__":
     try:
         args = sys.argv[1:]
 
-        confpath = os.path.join(etcdir, "rsyncmirror.json")
+        confpath = os.path.join(os.path.expanduser("~/.rsyncmirror"), "rsyncmirror.json")
         debug = False
         allowdelete = False
         destinations = None
@@ -276,6 +276,10 @@ if __name__ == "__main__":
                 yes = True
             else:
                 raise Exception()
+
+        if not os.path.exists(confpath):
+            sys.stderr.write("error: cannot find configuration file (%s)\n" % confpath)
+            sys.exit(1)
 
         if not showlist:
             if not mirrorpath and not suitename:
