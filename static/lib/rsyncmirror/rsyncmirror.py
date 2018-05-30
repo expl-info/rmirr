@@ -57,6 +57,13 @@ def do_mirror(mirrorpath, mirrors):
 
         # validate source
         relpath = mirrorpath[len(bestsrcpath)+1:]
+        if safemode:
+            if mirrorpath != bestsrcpath:
+                if mirrorpath[len(bestsrcpath)] != "/" or relpath.startswith("/"):
+                    print "warning: unexpected values for bestsrcpath (%s) and relpath (%s)" % (bestsrcpath, relpath)
+                    reply = raw_input("continue (y/n)? ")
+                    if reply not in ["y"]:
+                        sys.exit(1)
         srcuserhostpath = bestmirrord["source"]
         srcuser, srchost, srcpath = split_userhostpath(srcuserhostpath)
 
@@ -66,6 +73,12 @@ def do_mirror(mirrorpath, mirrors):
         srcuserhostpath = "%s@%s:%s" % (thisusername, thishostname, srcpath)
         if debug:
             print "debug: new srcuserhostpath (%s)" % (srcuserhostpath,)
+        if safemode:
+            if not srcuserhostpath.endswith("/"):
+                print "warning: srcuserhostpath (%s) does not end with '/'" % (srcuserhostpath,)
+                reply = raw_input("continue (y/n)? ")
+                if reply not in ["y"]:
+                    sys.exit(1)
 
         if thisusername != srcuser:
             print "warning: you (%s) do not match source user (%s)" % (thisusername, srcuser)
@@ -192,6 +205,8 @@ Options:
 --dry   Dry run. Do not execute.
 --dry-rsync
         Dry run for rsync.
+--safeoff
+        Disable safemode.
 --verbose
         Enable verbosity.
 -y      Do not ask for confirmation before executing.""" % d
@@ -213,6 +228,7 @@ if __name__ == "__main__":
         dry = False
         dryrsync = False
         mirrorpath = None
+        safemode = True
         showlist = False
         suitename = None
         verbose = False
@@ -241,6 +257,8 @@ if __name__ == "__main__":
                 mirrorpath = os.path.realpath(args.pop(0))
             elif arg == "-s" and args:
                 suitename = args.pop(0)
+            elif arg == "--safeoff":
+                safemode = False
             elif arg == "--verbose":
                 verbose = True
             elif arg == "-y":
