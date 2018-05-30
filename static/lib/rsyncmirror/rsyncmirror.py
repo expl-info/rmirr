@@ -136,6 +136,13 @@ def find_mirror(mirrorpath, mirrors):
             print "debug: mirrorpath (%s) srcpath (%s) bestsrcpath (%s)" % (mirrorpath, srcpath, bestsrcpath)
     return bestsrcpath, bestmirrord
 
+def show_list(mirrors):
+    for mirrord in sorted(mirrors):
+        print "comment:      %s" % (mirrord.get("comment"),)
+        print "source:       %s" % (mirrord.get("source"),)
+        print "destinations: %s" % (", ".join(mirrord.get("destinations",[])))
+        print
+
 def split_userhostpath(userhostpath):
     if "@" in userhostpath:
         user, rest = userhostpath.split("@", 1)
@@ -255,11 +262,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if showlist:
-        for mirrord in sorted(mirrors):
-            print "comment:      %s" % (mirrord.get("comment"),)
-            print "source:       %s" % (mirrord.get("source"),)
-            print "destinations: %s" % (", ".join(mirrord.get("destinations",[])))
-            print
+        show_list(mirrors)
     elif suitename:
         paths = suitesd.get(suitename)
         for path in paths:
