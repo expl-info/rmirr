@@ -80,24 +80,29 @@ def do_mirror(mirrorpath, mirrors):
         # use only srcpath part
         cmdargs.append(srcpath)
 
-        # build dsthostpath (may be multiple)
-        for dstuserhost in bestmirrord.get("destinations"):
-            dstuser, dsthost, dstpath = split_userhostpath(dstuserhost)
+        # process for each destination
+        for dstuserhostpath in bestmirrord.get("destinations"):
+            # provide dstuser if needed
+            dstuser, dsthost, dstpath = split_userhostpath(dstuserhostpath)
             if dstuser == None:
-                dstuserhost = "%s@%s" % (thisusername, dstuserhost)
-            dstuser, dsthost, dstpath = split_userhostpath(dstuserhost)
+                dstuser = thisusername
+
+            # provide/ update dstpath
             if dstpath == None:
                 dstpath = mirrorpath
             else:
                 if relpath:
                     dstpath = os.path.join(dstpath, relpath)
+
+            # rebuild
+            dstuserhostpath = "%s@%s:%s" % (dstuser, dsthost, dstpath)
+
             if destinations and dsthost not in destinations:
                 if verbose:
                     print "verbose: skipping destination (%s)" % (dsthost,)
                 continue
 
             xcmdargs = cmdargs[:]
-            dstuserhostpath = "%s@%s:%s" % (dstuser, dsthost, dstpath)
             xcmdargs.append(dstuserhostpath)
             print "comment:   %s" % bestmirrord.get("comment", "")
             print "sync from: %s" % (srcuserhostpath,)
