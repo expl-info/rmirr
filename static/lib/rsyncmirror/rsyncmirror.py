@@ -140,7 +140,8 @@ def show_list(mirrors):
     for mirrord in sorted(mirrors):
         print "comment:      %s" % (mirrord.get("comment"),)
         print "source:       %s" % (mirrord.get("source"),)
-        print "destinations: %s" % (", ".join(mirrord.get("destinations",[])))
+        print "excludes:     %s" % ", ".join(mirrord.get("excludes",[]))
+        print "destinations: %s" % ", ".join(mirrord.get("destinations",[]))
         print
 
 def split_userhostpath(userhostpath):
