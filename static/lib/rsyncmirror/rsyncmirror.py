@@ -94,7 +94,13 @@ def do_mirror(mirrorpath, mirrors):
         cmdargs.append(srcpath)
 
         # process for each destination
+        sep = None
         for dstuserhostpath in bestmirrord.get("destinations"):
+            if sep != None:
+                print sep
+            else:
+                sep = ""
+
             # provide dstuser if needed
             dstuser, dsthost, dstpath = split_userhostpath(dstuserhostpath)
             if dstuser == None:
@@ -129,7 +135,7 @@ def do_mirror(mirrorpath, mirrors):
                     print "quitting"
                     sys.exit(0)
                 if reply not in ["y"]:
-                    print "aborted"
+                    print "skipped"
                     continue
             print "running ..."
             if dry:
@@ -155,12 +161,17 @@ def find_mirror(mirrorpath, mirrors):
     return bestsrcpath, bestmirrord
 
 def show_list(mirrors):
+    sep = None
     for mirrord in sorted(mirrors):
+        if sep != None:
+            print sep
+        else:
+            sep = ""
+
         print "comment:      %s" % (mirrord.get("comment"),)
         print "source:       %s" % (mirrord.get("source"),)
         print "excludes:     %s" % ", ".join(mirrord.get("excludes",[]))
         print "destinations: %s" % ", ".join(mirrord.get("destinations",[]))
-        print
 
 def split_userhostpath(userhostpath):
     if "@" in userhostpath:
