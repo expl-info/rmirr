@@ -156,11 +156,12 @@ def whoami():
 def print_usage():
     d = { "progname": os.path.basename(sys.argv[0]) }
     print """\
-usage: %(progname)s [<options>] (-p <path> | -s <suitename>)
+usage: %(progname)s [<options>] (-l|-p <path> | -s <suitename>)
 
 Mirror file objects at <path>.
 
 Where:
+-l      List mirrorable paths.
 -p <path>
         Mirror path.
 -s <suitename>
@@ -178,7 +179,6 @@ Options:
 --dry   Dry run. Do not execute.
 --dry-rsync
         Dry run for rsync.
--l      List mirrorable paths.
 --verbose
         Enable verbosity.
 -y      Do not ask for confirmation before executing.""" % d
@@ -235,8 +235,9 @@ if __name__ == "__main__":
             else:
                 raise Exception()
 
-        if not mirrorpath:
-            raise Exception()
+        if not showlist:
+            if not mirrorpath and not suitename:
+                raise Exception()
     except SystemExit:
         raise
     except:
