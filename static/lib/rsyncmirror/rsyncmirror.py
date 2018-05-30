@@ -136,7 +136,7 @@ def find_mirror(mirrorpath, mirrors):
             print "debug: mirrorpath (%s) srcpath (%s) bestsrcpath (%s)" % (mirrorpath, srcpath, bestsrcpath)
     return bestsrcpath, bestmirrord
 
-def split_userhostpath(s):
+def split_userhostpath(userhostpath):
     if "@" in userhostpath:
         user, rest = userhostpath.split("@", 1)
     else:
