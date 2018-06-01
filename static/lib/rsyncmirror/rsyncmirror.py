@@ -69,6 +69,10 @@ def do_mirror(mirrorpath, mirrors):
         srcuser, srchost, srcpath = split_userhostpath(srcuserhostpath)
 
         srcpath = mirrorpath
+        if not os.path.exists(mirrorpath):
+            print "warning: skipping path (%s); does not exist on source" % (mirrorpath,)
+            return
+
         if os.path.isdir(mirrorpath):
             srcpath += "/"
         srcuserhostpath = "%s@%s:%s" % (thisusername, thishostname, srcpath)
