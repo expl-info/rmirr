@@ -181,8 +181,19 @@ def find_mirror(mirrorpath, mirrors):
                 % (mirrorpath, srcpath, bestsrcpath, bestxsrcpath)
     return bestsrcpath, bestxsrcpath, bestmirrord
 
-def show_list(mirrors):
+def show_list(suitesd, mirrors):
     sep = None
+
+    for suitename in sorted(suitesd.keys()):
+        if sep != None:
+            print sep
+        else:
+            sep = ""
+
+        paths = suitesd.get(suitename, [])
+        print "suite:        %s" % (suitename,)
+        print "paths:        %s" % (", ".join(paths))
+
     for mirrord in sorted(mirrors):
         if sep != None:
             print sep
@@ -323,7 +334,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if showlist:
-        show_list(mirrors)
+        show_list(suitesd, mirrors)
     elif suitename:
         paths = suitesd.get(suitename)
         for path in paths:
