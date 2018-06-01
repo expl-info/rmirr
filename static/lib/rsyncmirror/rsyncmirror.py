@@ -191,6 +191,7 @@ def show_list(mirrors):
 
         print "comment:      %s" % (mirrord.get("comment"),)
         print "source:       %s" % (mirrord.get("source"),)
+        print "names:        %s" % ", ".join(mirrord.get("names", []))
         print "excludes:     %s" % ", ".join(mirrord.get("excludes",[]))
         print "destinations: %s" % ", ".join(mirrord.get("destinations",[]))
 
