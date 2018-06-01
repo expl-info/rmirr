@@ -34,7 +34,7 @@ def do_mirror(mirrorpath, mirrors):
     bestsrcpath, bestxsrcpath, bestmirrord = find_mirror(mirrorpath, mirrors)
     if bestsrcpath == "":
         sys.stderr.write("error: no match\n")
-        sys.exit(1)
+        return
     else:
         if debug:
             print "debug: bestsrcpath (%s)" % (bestsrcpath,)
@@ -64,7 +64,8 @@ def do_mirror(mirrorpath, mirrors):
                     print "warning: unexpected values for bestsrcpath (%s) and relpath (%s)" % (bestsrcpath, relpath)
                     reply = raw_input("continue (y/n)? ")
                     if reply not in ["y"]:
-                        sys.exit(1)
+                        return
+
         srcuserhostpath = bestmirrord["source"]
         srcuser, srchost, srcpath = split_userhostpath(srcuserhostpath)
 
@@ -78,23 +79,26 @@ def do_mirror(mirrorpath, mirrors):
         srcuserhostpath = "%s@%s:%s" % (thisusername, thishostname, srcpath)
         if debug:
             print "debug: new srcuserhostpath (%s)" % (srcuserhostpath,)
+
         if safemode:
             if not srcuserhostpath.endswith("/"):
                 print "warning: srcuserhostpath (%s) does not end with '/'" % (srcuserhostpath,)
                 reply = raw_input("continue (y/n)? ")
                 if reply not in ["y"]:
-                    sys.exit(1)
+                    return
 
         if thisusername != srcuser:
             print "warning: you (%s) do not match source user (%s)" % (thisusername, srcuser)
             reply = raw_input("continue (y/n)? ")
             if not yes and reply not in ["y"]:
-                sys.exit(1)
+                return
+
         if thishostname != srchost:
             print "warning: this host (%s) does not match source host (%s)" % (thishostname, srchost)
             reply = raw_input("continue (y/n)? ")
             if not yes and reply not in ["y"]:
-                sys.exit(1)
+                return
+
         # use only srcpath part
         cmdargs.append(srcpath)
 
@@ -134,6 +138,7 @@ def do_mirror(mirrorpath, mirrors):
             print "excludes:  %s" % " ".join(excludes)
             if debug:
                 print xcmdargs
+
             if not yes:
                 reply = raw_input("execute (y/n/q)? ")
                 if reply == "q":
@@ -142,6 +147,7 @@ def do_mirror(mirrorpath, mirrors):
                 if reply not in ["y"]:
                     print "skipped"
                     continue
+
             print "running ..."
             if dry:
                 print " ".join(xcmdargs)
