@@ -181,6 +181,46 @@ def find_mirror(mirrorpath, mirrors):
                 % (mirrorpath, srcpath, bestsrcpath, bestxsrcpath)
     return bestsrcpath, bestxsrcpath, bestmirrord
 
+def load_conf(confpath, normalize):
+    """Load configuration file. Ensure that settings are normalized.
+    """
+    conf = json.load(open(confpath))
+    suitesd = conf.get("suites", {})
+    mirrors = conf.get("mirrors", [])
+
+    if normalize:
+        for suitename, paths in suitesd.items():
+            for i, path in enumerate(paths):
+                paths[i] = os.path.expanduser(path)
+
+        for mirrord in mirrors:
+            mirrord["source"] = normalize_userhostpath(mirrord["source"])
+
+        destinations = mirrord["destinations"]
+        for i, userhostpath in enumerate(destinations):
+             destinations[i] = normalize_userhostpath(userhostpath)
+
+    return conf
+
+def join_userhostpath(user, host, path):
+    """Join user, host, and path components.
+    """
+    l = []
+    if user:
+        l.append("%s@" % user)
+    l.append(host)
+    if path:
+        l.append(":%s" % path)
+    return "".join(l)
+
+def normalize_userhostpath(userhostpath):
+    """Return a normalized userhostpath.
+    """
+    user, host, path = split_userhostpath(userhostpath)
+    if path:
+        path = os.path.expanduser(path)
+    return join_userhostpath(user, host, path)
+
 def show_list(suitesd, mirrors):
     sep = None
 
@@ -207,6 +247,8 @@ def show_list(suitesd, mirrors):
         print "destinations: %s" % ", ".join(mirrord.get("destinations",[]))
 
 def split_userhostpath(userhostpath):
+    """Split userhostpath into components and return.
+    """
     if "@" in userhostpath:
         user, rest = userhostpath.split("@", 1)
     else:
@@ -215,7 +257,7 @@ def split_userhostpath(userhostpath):
         host, path = rest.split(":", 1)
     else:
         host, path = rest, None
-    return user, host, os.path.expanduser(path)
+    return user, host, path
 
 def whoami():
     try:
@@ -325,8 +367,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        conf = json.load(open(confpath))
-        mirrors = conf.get("mirrors")
+        normalize = not showlist
+        conf = load_conf(confpath, normalize)
+        mirrors = conf.get("mirrors", [])
         suitesd = conf.get("suites", {})
     except:
         #traceback.print_exc()
