@@ -338,6 +338,7 @@ if __name__ == "__main__":
     elif suitename:
         paths = suitesd.get(suitename)
         for path in paths:
+            path = os.path.expanduser(path)
             do_mirror(path, mirrors)
     else:
         do_mirror(mirrorpath, mirrors)
