@@ -214,7 +214,7 @@ def whoami():
 def print_usage():
     d = { "progname": os.path.basename(sys.argv[0]) }
     print """\
-usage: %(progname)s [<options>] (-l|-p <path> | -s <suitename>)
+usage: %(progname)s [<options>] (-l | -p <path> | -s <suitename>)
 
 Mirror file objects at <path>.
 
