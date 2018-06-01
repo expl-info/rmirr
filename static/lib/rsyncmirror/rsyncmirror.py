@@ -203,7 +203,7 @@ def split_userhostpath(userhostpath):
         host, path = rest.split(":", 1)
     else:
         host, path = rest, None
-    return user, host, path
+    return user, host, os.path.expanduser(path)
 
 def whoami():
     try:
