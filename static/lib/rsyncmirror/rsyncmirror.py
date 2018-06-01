@@ -31,13 +31,14 @@ import sys
 import traceback
 
 def do_mirror(mirrorpath, mirrors):
-    bestsrcpath, bestmirrord = find_mirror(mirrorpath, mirrors)
+    bestsrcpath, bestxsrcpath, bestmirrord = find_mirror(mirrorpath, mirrors)
     if bestsrcpath == "":
         sys.stderr.write("error: no match\n")
         sys.exit(1)
     else:
         if debug:
             print "debug: bestsrcpath (%s)" % (bestsrcpath,)
+            print "debug: bestxsrcpath (%s)" % (bestxsrcpath,)
             print "debug: bestmirrord (%s)" % (bestmirrord,)
 
         cmdargs = ["rsync", "-avz"]
@@ -149,16 +150,26 @@ def do_mirror(mirrorpath, mirrors):
 def find_mirror(mirrorpath, mirrors):
     bestmirrord = None
     bestsrcpath = ""
+    bestxsrcpath = ""
     for mirrord in mirrors:
         srcuserhostpath = mirrord["source"]
         _, _, srcpath = split_userhostpath(srcuserhostpath)
-        if mirrorpath == srcpath or mirrorpath.startswith(srcpath+"/"):
-            if len(srcpath) > len(bestsrcpath):
-                bestsrcpath = srcpath
-                bestmirrord = mirrord
+        names = mirrord.get("names") or [None]
+        for name in names:
+            if name == None:
+                xsrcpath = srcpath
+            else:
+                xsrcpath = os.path.join(srcpath, name)
+
+            if mirrorpath == xsrcpath or mirrorpath.startswith(xsrcpath+"/"):
+                if len(xsrcpath) > len(bestxsrcpath):
+                    bestxsrcpath = xsrcpath
+                    bestsrcpath = srcpath
+                    bestmirrord = mirrord
         if debug:
-            print "debug: mirrorpath (%s) srcpath (%s) bestsrcpath (%s)" % (mirrorpath, srcpath, bestsrcpath)
-    return bestsrcpath, bestmirrord
+            print "debug: mirrorpath (%s) srcpath (%s) bestsrcpath (%s) bestxsrcpath (%s)" \
+                % (mirrorpath, srcpath, bestsrcpath, bestxsrcpath)
+    return bestsrcpath, bestxsrcpath, bestmirrord
 
 def show_list(mirrors):
     sep = None

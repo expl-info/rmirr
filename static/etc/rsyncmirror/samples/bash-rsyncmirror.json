@@ -1,0 +1,11 @@
+{
+	"mirrors": [
+		{
+			"comment": "bash configuration files",
+			"source": "<user>@<hostname>:<path>",
+			"names": [".bash_completion.d", ".bash_profile", ".bash_logout", ".bashrc", ".profile", ".profile.d"],
+			"excludes": [".snapshot", ".snapshots"],
+			"destinations": ["<hostname>"]
+		}
+	]
+}
