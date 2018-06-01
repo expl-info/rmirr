@@ -67,7 +67,7 @@ def do_mirror(mirrorpath, mirrors):
                         return
 
         srcuserhostpath = bestmirrord["source"]
-        srcuser, srchost, srcpath = split_userhostpath(srcuserhostpath)
+        srcuser, srchost, srcpath = userhostpath_split(srcuserhostpath)
 
         srcpath = mirrorpath
         if not os.path.exists(mirrorpath):
@@ -111,7 +111,7 @@ def do_mirror(mirrorpath, mirrors):
                 sep = ""
 
             # provide dstuser if needed
-            dstuser, dsthost, dstpath = split_userhostpath(dstuserhostpath)
+            dstuser, dsthost, dstpath = userhostpath_split(dstuserhostpath)
             if dstuser == None:
                 dstuser = thisusername
 
@@ -163,7 +163,7 @@ def find_mirror(mirrorpath, mirrors):
     bestxsrcpath = ""
     for mirrord in mirrors:
         srcuserhostpath = mirrord["source"]
-        _, _, srcpath = split_userhostpath(srcuserhostpath)
+        _, _, srcpath = userhostpath_split(srcuserhostpath)
         names = mirrord.get("names") or [None]
         for name in names:
             if name == None:
@@ -194,32 +194,13 @@ def load_conf(confpath, normalize):
                 paths[i] = os.path.expanduser(path)
 
         for mirrord in mirrors:
-            mirrord["source"] = normalize_userhostpath(mirrord["source"])
+            mirrord["source"] = userhostpath_normalize(mirrord["source"])
 
         destinations = mirrord["destinations"]
         for i, userhostpath in enumerate(destinations):
-             destinations[i] = normalize_userhostpath(userhostpath)
+             destinations[i] = userhostpath_normalize(userhostpath)
 
     return conf
-
-def join_userhostpath(user, host, path):
-    """Join user, host, and path components.
-    """
-    l = []
-    if user:
-        l.append("%s@" % user)
-    l.append(host)
-    if path:
-        l.append(":%s" % path)
-    return "".join(l)
-
-def normalize_userhostpath(userhostpath):
-    """Return a normalized userhostpath.
-    """
-    user, host, path = split_userhostpath(userhostpath)
-    if path:
-        path = os.path.expanduser(path)
-    return join_userhostpath(user, host, path)
 
 def show_list(suitesd, mirrors):
     sep = None
@@ -246,7 +227,26 @@ def show_list(suitesd, mirrors):
         print "excludes:     %s" % ", ".join(mirrord.get("excludes",[]))
         print "destinations: %s" % ", ".join(mirrord.get("destinations",[]))
 
-def split_userhostpath(userhostpath):
+def userhostpath_join(user, host, path):
+    """Join user, host, and path components.
+    """
+    l = []
+    if user:
+        l.append("%s@" % user)
+    l.append(host)
+    if path:
+        l.append(":%s" % path)
+    return "".join(l)
+
+def userhostpath_normalize(userhostpath):
+    """Return a normalized userhostpath.
+    """
+    user, host, path = userhostpath_split(userhostpath)
+    if path:
+        path = os.path.expanduser(path)
+    return userhostpath_join(user, host, path)
+
+def userhostpath_split(userhostpath):
     """Split userhostpath into components and return.
     """
     if "@" in userhostpath:
