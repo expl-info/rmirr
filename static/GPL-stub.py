@@ -1,5 +1,5 @@
 # GPL--start
-# This file is part of rsyncmirror
+# This file is part of rmirr
 # Copyright (C) 2018 John Marshall
 #
 # This program is free software; you can redistribute it and/or

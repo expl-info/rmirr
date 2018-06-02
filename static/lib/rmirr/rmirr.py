@@ -1,9 +1,9 @@
 #! /usr/bin/env python2
 #
-# rsyncmirror.py
+# rmirr.py
 
 # GPL--start
-# This file is part of rsyncmirror
+# This file is part of rmirr
 # Copyright (C) 2018 John Marshall
 #
 # This program is free software; you can redistribute it and/or
@@ -300,14 +300,14 @@ Options:
 if __name__ == "__main__":
     progpath = os.path.realpath(sys.argv[0])
     libdir = os.path.realpath(os.path.dirname(progpath))
-    etcdir = os.path.realpath(os.path.join(libdir, "../../etc/rsyncmirror"))
+    etcdir = os.path.realpath(os.path.join(libdir, "../../etc/rmirr"))
     thisusername = whoami()
     thishostname = socket.getfqdn()
 
     try:
         args = sys.argv[1:]
 
-        confpath = os.path.join(os.path.expanduser("~/.rsyncmirror"), "rsyncmirror.json")
+        confpath = os.path.join(os.path.expanduser("~/.rmirr"), "rmirr.json")
         debug = False
         allowdelete = False
         destinations = None
