@@ -23,6 +23,7 @@
 
 import datetime
 import json
+import logging
 import os
 import os.path
 import pwd
@@ -32,6 +33,7 @@ import sys
 import tempfile
 import traceback
 
+HISTORY_FILEPATH = os.path.expanduser("~/.rmirr/history.log")
 REPORTS_DIRPATH = os.path.expanduser("~/.rmirr/reports")
 RMIRR_DIRPATH = os.path.expanduser("~/.rmirr")
 
@@ -160,6 +162,15 @@ def do_mirror(mirrorpath, mirrors):
                 try:
                     repf = None
                     repf, report_path  = open_report()
+
+                    logger.info("starting")
+                    logger.info("comment=%s" % bestmirrord.get("comment", ""))
+                    logger.info("from=%s" % srcuserhostpath)
+                    logger.info("to=%s" % dstuserhostpath)
+                    logger.info("excludes=%s" % " ".join(excludes))
+                    logger.info("command=%s" % " ".join(xcmdargs))
+                    logger.info("report=%s" % report_path)
+
                     repf.write("start: %s\n----------\n" % get_datetimestamp())
                     repf.flush()
 
@@ -172,6 +183,7 @@ def do_mirror(mirrorpath, mirrors):
 
                     repf.write("----------\nend: %s\n" % get_datetimestamp())
                 finally:
+                    logger.info("ending")
                     if repf != None:
                         repf.close()
 
@@ -238,6 +250,16 @@ def setup():
         os.mkdir(RMIRR_DIRPATH)
     if not os.path.exists(REPORTS_DIRPATH):
         os.mkdir(REPORTS_DIRPATH)
+
+    setup_logger()
+
+def setup_logger():
+    global logger
+
+    logger = logging.basicConfig(filename=HISTORY_FILEPATH,
+        format="[%(asctime)-15s] [%(process)d] [%(levelname)s] %(message)s",
+        level=logging.NOTSET)
+    logger = logging.getLogger()
 
 def show_list(suitesd, mirrors):
     sep = None
