@@ -21,6 +21,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # GPL--end
 
+import datetime
 import json
 import os
 import os.path
@@ -28,7 +29,11 @@ import pwd
 import socket
 import subprocess
 import sys
+import tempfile
 import traceback
+
+REPORTS_DIRPATH = os.path.expanduser("~/.rmirr/reports")
+RMIRR_DIRPATH = os.path.expanduser("~/.rmirr")
 
 def do_mirror(mirrorpath, mirrors):
     bestsrcpath, bestxsrcpath, bestmirrord = find_mirror(mirrorpath, mirrors)
@@ -152,10 +157,23 @@ def do_mirror(mirrorpath, mirrors):
             if dry:
                 print " ".join(xcmdargs)
             else:
-                p = subprocess.Popen(xcmdargs, shell=False, close_fds=True)
-                p.wait()
-                if p.returncode != 0:
-                    print "warning: non-zero exit value (%s)" % (p.returncode,)
+                try:
+                    repf = None
+                    repf, report_path  = open_report()
+                    repf.write("start: %s\n----------\n" % get_datetimestamp())
+                    repf.flush()
+
+                    p = subprocess.Popen(xcmdargs,
+                        stdout=repf, stderr=subprocess.STDOUT,
+                        shell=False, close_fds=True)
+                    p.wait()
+                    if p.returncode != 0:
+                        print "warning: non-zero exit value (%s)" % (p.returncode,)
+
+                    repf.write("----------\nend: %s\n" % get_datetimestamp())
+                finally:
+                    if repf != None:
+                        repf.close()
 
 def find_mirror(mirrorpath, mirrors):
     bestmirrord = None
@@ -181,6 +199,9 @@ def find_mirror(mirrorpath, mirrors):
                 % (mirrorpath, srcpath, bestsrcpath, bestxsrcpath)
     return bestsrcpath, bestxsrcpath, bestmirrord
 
+def get_datetimestamp():
+    return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
 def load_conf(confpath, normalize):
     """Load configuration file. Ensure that settings are normalized.
     """
@@ -201,6 +222,22 @@ def load_conf(confpath, normalize):
              destinations[i] = userhostpath_normalize(userhostpath)
 
     return conf
+
+def open_report():
+    """Open new report file returning file object and path.
+    """
+    prefix = "%s-" % get_datetimestamp()
+    fd, path  = tempfile.mkstemp(suffix=".txt", prefix=prefix, dir=REPORTS_DIRPATH)
+    f = os.fdopen(fd, "w")
+    return (f, path)
+
+def setup():
+    """Setup. Includes working paths.
+    """
+    if not os.path.exists(RMIRR_DIRPATH):
+        os.mkdir(RMIRR_DIRPATH)
+    if not os.path.exists(REPORTS_DIRPATH):
+        os.mkdir(REPORTS_DIRPATH)
 
 def show_list(suitesd, mirrors):
     sep = None
@@ -364,6 +401,12 @@ if __name__ == "__main__":
     except:
         #traceback.print_exc()
         sys.stderr.write("error: bad/missing arguments\n")
+        sys.exit(1)
+
+    try:
+        setup()
+    except:
+        sys.stderr.write("error: cannot setup working file/dir under ~/.rmirr\n")
         sys.exit(1)
 
     try:
