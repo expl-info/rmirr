@@ -22,6 +22,7 @@
 # GPL--end
 
 import datetime
+import fcntl
 import json
 import logging
 import os
@@ -34,8 +35,12 @@ import tempfile
 import traceback
 
 HISTORY_FILEPATH = os.path.expanduser("~/.rmirr/history.log")
+LOCKS_DIRPATH = os.path.expanduser("~/.rmirr/locks")
 REPORTS_DIRPATH = os.path.expanduser("~/.rmirr/reports")
 RMIRR_DIRPATH = os.path.expanduser("~/.rmirr")
+
+class RmirrException(Exception):
+    pass
 
 def do_mirror(mirrorpath, mirrors):
     bestsrcpath, bestxsrcpath, bestmirrord = find_mirror(mirrorpath, mirrors)
@@ -165,8 +170,8 @@ def do_mirror(mirrorpath, mirrors):
                 print " ".join(xcmdargs)
             else:
                 try:
+                    lockfd = None
                     repf = None
-                    repf, report_path  = open_report()
 
                     logger.info("starting")
                     logger.info("name=%s" % name)
@@ -174,24 +179,40 @@ def do_mirror(mirrorpath, mirrors):
                     logger.info("from=%s" % srcuserhostpath)
                     logger.info("to=%s" % dstuserhostpath)
                     logger.info("excludes=%s" % " ".join(excludes))
-                    logger.info("command=%s" % " ".join(xcmdargs))
-                    logger.info("report=%s" % report_path)
 
-                    repf.write("start: %s\n----------\n" % get_datetimestamp())
-                    repf.flush()
+                    try:
+                        lockfd = os.open(os.path.join(LOCKS_DIRPATH, name), os.O_CREAT|os.O_WRONLY)
+                        fcntl.lockf(lockfd, fcntl.LOCK_EX|fcntl.LOCK_NB)
+                        logger.info("obtained lock")
+                    except:
+                        print "error: cannot get lock"
+                        raise RmirrException("cannot get lock")
 
-                    p = subprocess.Popen(xcmdargs,
-                        stdout=repf, stderr=subprocess.STDOUT,
-                        shell=False, close_fds=True)
-                    p.wait()
-                    if p.returncode != 0:
-                        print "warning: non-zero exit value (%s)" % (p.returncode,)
+                    try:
+                        repf, report_path  = open_report()
+                        logger.info("report=%s" % report_path)
+                        repf.write("start: %s\n----------\n" % get_datetimestamp())
+                        repf.flush()
 
-                    repf.write("----------\nend: %s\n" % get_datetimestamp())
+                        logger.info("command=%s" % " ".join(xcmdargs))
+                        p = subprocess.Popen(xcmdargs,
+                            stdout=repf, stderr=subprocess.STDOUT,
+                            shell=False, close_fds=True)
+                        p.wait()
+                        if p.returncode != 0:
+                            print "warning: non-zero exit value (%s)" % (p.returncode,)
+
+                        repf.write("----------\nend: %s\n" % get_datetimestamp())
+                    except:
+                        raise RmirrException("mirror failure")
+                except RmirrException as e:
+                    logger.info(e)
                 finally:
-                    logger.info("ending")
+                    if lockfd != None:
+                        os.close(lockfd)
                     if repf != None:
                         repf.close()
+                    logger.info("done")
 
 def find_mirror(mirrorpath, mirrors):
     bestmirrord = None
@@ -254,6 +275,8 @@ def setup():
     """
     if not os.path.exists(RMIRR_DIRPATH):
         os.mkdir(RMIRR_DIRPATH)
+    if not os.path.exists(LOCKS_DIRPATH):
+        os.mkdir(LOCKS_DIRPATH)
     if not os.path.exists(REPORTS_DIRPATH):
         os.mkdir(REPORTS_DIRPATH)
 
