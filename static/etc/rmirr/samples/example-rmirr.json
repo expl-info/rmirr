@@ -1,18 +1,21 @@
 {
 	"mirrors": [
 		{
+			"name": "data-home--finance-hr",
 			"comment": "data home -> finance, hr",
 			"source": "ssm@home.abc.xyz:/data/main",
 			"excludes": [".snapshot", ".snapshots"],
 			"destinations": ["finance.abc.xyz", "hr.abc.xyz"]
 		},
 		{
+			"name": "data-home--finance",
 			"comment": "data home -> finance",
 			"source": "data@home.abc.xyz:/data/finance",
 			"excludes": [".snapshot", ".snapshots"],
 			"destinations": ["finance.abc.xyz"]
 		},
 		{
+			"name": "data-home--hr",
 			"comment": "data home -> hr",
 			"paths": ["/data/hr"],
 			"source": "data@home.abc.xyz:/data/hr",

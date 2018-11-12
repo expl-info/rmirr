@@ -50,6 +50,9 @@ def do_mirror(mirrorpath, mirrors):
 
         cmdargs = ["rsync", "-avz"]
 
+        # name
+        name = bestmirrord.get("name", None)
+
         # excludes
         excludes = bestmirrord.get("excludes", [])
         for s in excludes:
@@ -140,6 +143,7 @@ def do_mirror(mirrorpath, mirrors):
             xcmdargs = cmdargs[:]
             xcmdargs.append(dstuserhostpath)
             print "comment:   %s" % bestmirrord.get("comment", "")
+            print "name:      %s" % name
             print "sync from: %s" % (srcuserhostpath,)
             print "sync to:   %s" % (dstuserhostpath,)
             print "excludes:  %s" % " ".join(excludes)
@@ -165,6 +169,7 @@ def do_mirror(mirrorpath, mirrors):
 
                     logger.info("starting")
                     logger.info("comment=%s" % bestmirrord.get("comment", ""))
+                    logger.info("name=%s" % name)
                     logger.info("from=%s" % srcuserhostpath)
                     logger.info("to=%s" % dstuserhostpath)
                     logger.info("excludes=%s" % " ".join(excludes))
@@ -280,6 +285,7 @@ def show_list(suitesd, mirrors):
         else:
             sep = ""
 
+        print "name:         %s" % (mirrord.get("name"),)
         print "comment:      %s" % (mirrord.get("comment"),)
         print "source:       %s" % (mirrord.get("source"),)
         print "names:        %s" % ", ".join(mirrord.get("names", []))
