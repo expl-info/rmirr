@@ -52,6 +52,7 @@ def do_mirror(mirrorpath, mirrors):
 
         # name
         name = bestmirrord.get("name", None)
+        comment = bestmirrord.get("comment", None)
 
         # excludes
         excludes = bestmirrord.get("excludes", [])
@@ -142,8 +143,8 @@ def do_mirror(mirrorpath, mirrors):
 
             xcmdargs = cmdargs[:]
             xcmdargs.append(dstuserhostpath)
-            print "comment:   %s" % bestmirrord.get("comment", "")
             print "name:      %s" % name
+            print "comment:   %s" % comment
             print "sync from: %s" % (srcuserhostpath,)
             print "sync to:   %s" % (dstuserhostpath,)
             print "excludes:  %s" % " ".join(excludes)
@@ -168,8 +169,8 @@ def do_mirror(mirrorpath, mirrors):
                     repf, report_path  = open_report()
 
                     logger.info("starting")
-                    logger.info("comment=%s" % bestmirrord.get("comment", ""))
                     logger.info("name=%s" % name)
+                    logger.info("comment=%s" % comment)
                     logger.info("from=%s" % srcuserhostpath)
                     logger.info("to=%s" % dstuserhostpath)
                     logger.info("excludes=%s" % " ".join(excludes))
