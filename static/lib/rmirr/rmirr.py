@@ -32,6 +32,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
 
 HISTORY_FILEPATH = os.path.expanduser("~/.rmirr/history.log")
@@ -204,7 +205,18 @@ def do_mirror(mirrorpath, mirrors):
                         p = subprocess.Popen(xcmdargs,
                             stdout=repf, stderr=subprocess.STDOUT,
                             shell=False, close_fds=True)
-                        p.wait()
+
+                        if showreport:
+                            with open(report_path) as showf:
+                                while p.returncode == None:
+                                    p.poll()
+                                    s = showf.read()
+                                    sys.stdout.write(s)
+                                    if s == "":
+                                        time.sleep(0.5)
+                        else:
+                            p.wait()
+
                         if p.returncode != 0:
                             print "warning: non-zero exit value (%s)" % (p.returncode,)
 
@@ -390,6 +402,8 @@ Options:
         Do not use/require lock to run.
 --safeoff
         Disable safemode.
+--showreport
+        Show report on console.
 --verbose
         Enable verbosity.
 -y      Do not ask for confirmation before executing.""" % d
@@ -415,6 +429,7 @@ if __name__ == "__main__":
         safemode = True
         showlist = False
         suitename = None
+        showreport = False
         verbose = False
         yes = False
 
@@ -445,6 +460,8 @@ if __name__ == "__main__":
                 suitename = args.pop(0)
             elif arg == "--safeoff":
                 safemode = False
+            elif arg == "--showreport":
+                showreport = True
             elif arg == "--verbose":
                 verbose = True
             elif arg == "-y":
