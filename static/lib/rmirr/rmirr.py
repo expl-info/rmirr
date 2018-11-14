@@ -198,8 +198,6 @@ def do_mirror(mirrorpath, mirrors):
                     try:
                         repf, report_path  = open_report()
                         logger.info("report=%s" % report_path)
-                        repf.write("start: %s\n----------\n" % get_datetimestamp())
-                        repf.flush()
 
                         logger.info("command=%s" % " ".join(xcmdargs))
                         p = subprocess.Popen(xcmdargs,
@@ -219,8 +217,6 @@ def do_mirror(mirrorpath, mirrors):
 
                         if p.returncode != 0:
                             print "warning: non-zero exit value (%s)" % (p.returncode,)
-
-                        repf.write("----------\nend: %s\n" % get_datetimestamp())
                     except:
                         raise RmirrException("mirror failure")
                 except RmirrException as e:
