@@ -68,9 +68,12 @@ def do_mirror(mirrorpath, mirrors):
         name = bestmirrord.get("name", None)
         comment = bestmirrord.get("comment", None)
 
-        email_recipients = bestmirrord.get("email_recipients", defaultsd.get("email_recipients", None))
-        if type(email_recipients) != types.ListType:
-            email_recipients = []
+        if mailto:
+            email_recipients = mailto
+        else:
+            email_recipients = bestmirrord.get("email_recipients", defaultsd.get("email_recipients", None))
+            if type(email_recipients) != types.ListType:
+                email_recipients = []
 
         # excludes
         excludes = bestmirrord.get("excludes", [])
@@ -436,6 +439,8 @@ Options:
 --dry   Dry run. Do not execute.
 --dry-rsync
         Dry run for rsync.
+--mailto <emailaddr>[,...]
+        Set/override recipients when mailing report.
 --mailreport
         Mail report.
 --nolock
@@ -464,6 +469,7 @@ if __name__ == "__main__":
         destinations = None
         dry = False
         dryrsync = False
+        mailto = None
         mailreport = False
         mirrorpath = None
         uselock = True
@@ -493,6 +499,8 @@ if __name__ == "__main__":
                 dryrsync = True
             elif arg == "-l":
                 showlist = True
+            elif arg == "--mailto" and args:
+                mailto = args.pop(0).split(",")
             elif arg == "--mailreport":
                 mailreport = True
             elif arg == "--nolock":
