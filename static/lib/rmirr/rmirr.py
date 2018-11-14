@@ -28,12 +28,14 @@ import logging
 import os
 import os.path
 import pwd
+import smtplib
 import socket
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
+import types
 
 HISTORY_FILEPATH = os.path.expanduser("~/.rmirr/history.log")
 LOCKS_DIRPATH = os.path.expanduser("~/.rmirr/locks")
@@ -59,6 +61,10 @@ def do_mirror(mirrorpath, mirrors):
         # name
         name = bestmirrord.get("name", None)
         comment = bestmirrord.get("comment", None)
+
+        email_recipients = bestmirrord.get("email_recipients", defaultsd.get("email_recipients", None))
+        if type(email_recipients) != types.ListType:
+            email_recipients = []
 
         # excludes
         excludes = bestmirrord.get("excludes", [])
@@ -149,12 +155,13 @@ def do_mirror(mirrorpath, mirrors):
 
             xcmdargs = cmdargs[:]
             xcmdargs.append(dstuserhostpath)
-            print "name:      %s" % name
-            print "comment:   %s" % comment
-            print "sync from: %s" % (srcuserhostpath,)
-            print "sync to:   %s" % (dstuserhostpath,)
-            print "excludes:  %s" % " ".join(excludes)
-            print "uselock:   %s" % (uselock and "yes" and "no",)
+            print "name:             %s" % name
+            print "comment:          %s" % comment
+            print "sync from:        %s" % (srcuserhostpath,)
+            print "sync to:          %s" % (dstuserhostpath,)
+            print "excludes:         %s" % " ".join(excludes)
+            print "uselock:          %s" % (uselock and "yes" and "no",)
+            print "email recipients: %s" % " ".join(email_recipients)
             if debug:
                 print xcmdargs
 
@@ -182,6 +189,7 @@ def do_mirror(mirrorpath, mirrors):
                     logger.info("to=%s" % dstuserhostpath)
                     logger.info("excludes=%s" % " ".join(excludes))
                     logger.info("uselock=%s" % uselock and "yes" or "no")
+                    logger.info("email recipients=%s" % " ".join(email_recipients))
 
                     if uselock:
                         try:
@@ -227,6 +235,15 @@ def do_mirror(mirrorpath, mirrors):
                     if repf != None:
                         repf.close()
                     logger.info("done")
+
+            if mailreport:
+                try:
+                    subject = "rmirr report for %s (%s)" % (name, os.path.basename(report_path))
+                    sendreport(email_recipients, subject, report_path)
+                except:
+                    traceback.print_exc()
+                    logger.error("failed to send report")
+                    print "error: failed to send report"
 
 def find_mirror(mirrorpath, mirrors):
     bestmirrord = None
@@ -284,6 +301,24 @@ def open_report():
     f = os.fdopen(fd, "w")
     return (f, path)
 
+def sendreport(recipients, subject, report_path):
+    sender = "%s@%s" % (whoami(), socket.getfqdn())
+
+    if recipients:
+        parts = [
+            "From: %s\r\n" % sender,
+            "To: %s\r\n" % ", ".join(recipients),
+            "Subject: %s\r\n" % subject,
+            "\r\n",
+            "Report path: %s\r\n" % report_path,
+            "\r\n",
+            "Report:\r\n",
+            open(report_path, "r").read(),
+        ]
+        server = smtplib.SMTP("localhost")
+        server.sendmail(sender, recipients, "".join(parts))
+        server.quit()
+
 def setup():
     """Setup. Includes working paths.
     """
@@ -323,12 +358,13 @@ def show_list(suitesd, mirrors):
         else:
             sep = ""
 
-        print "name:         %s" % (mirrord.get("name"),)
-        print "comment:      %s" % (mirrord.get("comment"),)
-        print "source:       %s" % (mirrord.get("source"),)
-        print "names:        %s" % ", ".join(mirrord.get("names", []))
-        print "excludes:     %s" % ", ".join(mirrord.get("excludes",[]))
-        print "destinations: %s" % ", ".join(mirrord.get("destinations",[]))
+        print "name:             %s" % (mirrord.get("name"),)
+        print "comment:          %s" % (mirrord.get("comment"),)
+        print "source:           %s" % (mirrord.get("source"),)
+        print "names:            %s" % ", ".join(mirrord.get("names", []))
+        print "excludes:         %s" % ", ".join(mirrord.get("excludes",[]))
+        print "destinations:     %s" % ", ".join(mirrord.get("destinations",[]))
+        print "email recipients: %s" % " ".join(mirrord.get("email_recipients", []))
 
 def userhostpath_join(user, host, path):
     """Join user, host, and path components.
@@ -394,6 +430,8 @@ Options:
 --dry   Dry run. Do not execute.
 --dry-rsync
         Dry run for rsync.
+--mailreport
+        Mail report.
 --nolock
         Do not use/require lock to run.
 --safeoff
@@ -420,6 +458,7 @@ if __name__ == "__main__":
         destinations = None
         dry = False
         dryrsync = False
+        mailreport = False
         mirrorpath = None
         uselock = True
         safemode = True
@@ -448,6 +487,8 @@ if __name__ == "__main__":
                 dryrsync = True
             elif arg == "-l":
                 showlist = True
+            elif arg == "--mailreport":
+                mailreport = True
             elif arg == "--nolock":
                 uselock = False
             elif arg == "-p" and args:
@@ -488,6 +529,7 @@ if __name__ == "__main__":
     try:
         normalize = not showlist
         conf = load_conf(confpath, normalize)
+        defaultsd = conf.get("defaults", {})
         mirrors = conf.get("mirrors", [])
         suitesd = conf.get("suites", {})
     except:
