@@ -153,6 +153,7 @@ def do_mirror(mirrorpath, mirrors):
             print "sync from: %s" % (srcuserhostpath,)
             print "sync to:   %s" % (dstuserhostpath,)
             print "excludes:  %s" % " ".join(excludes)
+            print "uselock:   %s" % (uselock and "yes" and "no",)
             if debug:
                 print xcmdargs
 
@@ -179,14 +180,19 @@ def do_mirror(mirrorpath, mirrors):
                     logger.info("from=%s" % srcuserhostpath)
                     logger.info("to=%s" % dstuserhostpath)
                     logger.info("excludes=%s" % " ".join(excludes))
+                    logger.info("uselock=%s" % uselock and "yes" or "no")
 
-                    try:
-                        lockfd = os.open(os.path.join(LOCKS_DIRPATH, name), os.O_CREAT|os.O_WRONLY)
-                        fcntl.lockf(lockfd, fcntl.LOCK_EX|fcntl.LOCK_NB)
-                        logger.info("obtained lock")
-                    except:
-                        print "error: cannot get lock"
-                        raise RmirrException("cannot get lock")
+                    if uselock:
+                        try:
+                            lockfd = os.open(os.path.join(LOCKS_DIRPATH, name), os.O_CREAT|os.O_WRONLY)
+                            fcntl.lockf(lockfd, fcntl.LOCK_EX|fcntl.LOCK_NB)
+                            logger.info("obtained lock")
+                        except:
+                            print "error: cannot get lock"
+                            raise RmirrException("cannot get lock")
+                    else:
+                        logger.info("bypassing lock")
+                        print "info: bypassing lock"
 
                     try:
                         repf, report_path  = open_report()
@@ -380,6 +386,8 @@ Options:
 --dry   Dry run. Do not execute.
 --dry-rsync
         Dry run for rsync.
+--nolock
+        Do not use/require lock to run.
 --safeoff
         Disable safemode.
 --verbose
@@ -403,6 +411,7 @@ if __name__ == "__main__":
         dry = False
         dryrsync = False
         mirrorpath = None
+        uselock = True
         safemode = True
         showlist = False
         suitename = None
@@ -428,6 +437,8 @@ if __name__ == "__main__":
                 dryrsync = True
             elif arg == "-l":
                 showlist = True
+            elif arg == "--nolock":
+                uselock = False
             elif arg == "-p" and args:
                 mirrorpath = os.path.normpath(args.pop(0))
             elif arg == "-s" and args:
