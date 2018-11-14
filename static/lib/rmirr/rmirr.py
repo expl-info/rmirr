@@ -42,6 +42,12 @@ LOCKS_DIRPATH = os.path.expanduser("~/.rmirr/locks")
 REPORTS_DIRPATH = os.path.expanduser("~/.rmirr/reports")
 RMIRR_DIRPATH = os.path.expanduser("~/.rmirr")
 
+# globals
+conf = None
+defaultsd = None
+mirrors = None
+suitesd = None
+
 class RmirrException(Exception):
     pass
 
