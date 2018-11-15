@@ -169,7 +169,7 @@ def do_mirror(mirrorpath, mirrors):
             print "sync from:        %s" % (srcuserhostpath,)
             print "sync to:          %s" % (dstuserhostpath,)
             print "excludes:         %s" % " ".join(excludes)
-            print "uselock:          %s" % (uselock and "yes" and "no",)
+            print "uselock:          %s" % str(uselock and "yes" or "no")
             print "email recipients: %s" % " ".join(email_recipients)
             if debug:
                 print xcmdargs
@@ -197,7 +197,7 @@ def do_mirror(mirrorpath, mirrors):
                     logger.info("from=%s" % srcuserhostpath)
                     logger.info("to=%s" % dstuserhostpath)
                     logger.info("excludes=%s" % " ".join(excludes))
-                    logger.info("uselock=%s" % uselock and "yes" or "no")
+                    logger.info("uselock=%s" % str(uselock and "yes" or "no"))
                     logger.info("email recipients=%s" % " ".join(email_recipients))
 
                     if uselock:
