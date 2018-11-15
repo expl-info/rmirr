@@ -344,7 +344,7 @@ def setup_logger():
     global logger
 
     logger = logging.basicConfig(filename=HISTORY_FILEPATH,
-        format="[%(asctime)-15s] [%(process)d] [%(levelname)s] %(message)s",
+        format="[%(asctime)-15s] ["+str(socket.gethostname())+":%(process)d] [%(levelname)s] %(message)s",
         level=logging.NOTSET)
     logger = logging.getLogger()
 
