@@ -248,7 +248,8 @@ def do_mirror(mirrorpath, mirrors):
             if mailreport:
                 try:
                     subject = "rmirr report for %s (%s)" % (name, os.path.basename(report_path))
-                    sendreport(email_recipients, subject, report_path)
+                    sendreport(email_recipients, subject,
+                        name, srcuserhostpath, dstuserhostpath, excludes, report_path)
                 except:
                     traceback.print_exc()
                     logger.error("failed to send report")
@@ -310,7 +311,7 @@ def open_report():
     f = os.fdopen(fd, "w")
     return (f, path)
 
-def sendreport(recipients, subject, report_path):
+def sendreport(recipients, subject, name, srcuserhostpath, dstuserhostpath, excludes, report_path):
     sender = "%s@%s" % (whoami(), socket.getfqdn())
 
     if recipients:
@@ -319,9 +320,13 @@ def sendreport(recipients, subject, report_path):
             "To: %s\r\n" % ", ".join(recipients),
             "Subject: %s\r\n" % subject,
             "\r\n",
-            "Report path: %s\r\n" % report_path,
-            "\r\n",
-            "Report:\r\n",
+            "Name:        %s\n" % name,
+            "From:        %s\n" % srcuserhostpath,
+            "To:          %s\n" % dstuserhostpath,
+            "Excludes:    %s\n" % " ".join(excludes),
+            "Report path: %s\n" % report_path,
+            "\n",
+            "Report:\n",
             open(report_path, "r").read(),
         ]
         server = smtplib.SMTP("localhost")
