@@ -43,10 +43,24 @@ REPORTS_DIRPATH = os.path.expanduser("~/.rmirr/reports")
 RMIRR_DIRPATH = os.path.expanduser("~/.rmirr")
 
 # globals
+allowdelete = False
 conf = None
+debug = False
 defaultsd = None
+destinations = None
+dry = False
+dryrsync = False
+mailreport = False
+mailto = None
 mirrors = None
+safemode = True
+showreport = False
 suitesd = None
+thishostname = None
+thisusername = None
+uselock = True
+verbose = False
+yes = False
 
 class RmirrException(Exception):
     pass
@@ -458,7 +472,12 @@ Options:
         Enable verbosity.
 -y      Do not ask for confirmation before executing.""" % d
 
-if __name__ == "__main__":
+def main():
+    global allowdelete, conf, debug, defaultsd, destinations, \
+        dry, dryrsync, mailreport, mailto, mirrors, safemode, \
+        showreport, suitesd, thishostname, thisusername, \
+        uselock, verbose, yes
+
     progpath = os.path.realpath(sys.argv[0])
     libdir = os.path.realpath(os.path.dirname(progpath))
     etcdir = os.path.realpath(os.path.join(libdir, "../../etc/rmirr"))
@@ -469,21 +488,9 @@ if __name__ == "__main__":
         args = sys.argv[1:]
 
         confpath = os.path.join(os.path.expanduser("~/.rmirr"), "rmirr.json")
-        debug = False
-        allowdelete = False
-        destinations = None
-        dry = False
-        dryrsync = False
-        mailto = None
-        mailreport = False
         mirrorpath = None
-        uselock = True
-        safemode = True
         showlist = False
         suitename = None
-        showreport = False
-        verbose = False
-        yes = False
 
         while args:
             arg = args.pop(0)
@@ -565,3 +572,6 @@ if __name__ == "__main__":
             do_mirror(path, mirrors)
     else:
         do_mirror(mirrorpath, mirrors)
+
+if __name__ == "__main__":
+    main()
