@@ -37,30 +37,12 @@ import time
 import traceback
 import types
 
+import globls
+
 HISTORY_FILEPATH = os.path.expanduser("~/.rmirr/history.log")
 LOCKS_DIRPATH = os.path.expanduser("~/.rmirr/locks")
 REPORTS_DIRPATH = os.path.expanduser("~/.rmirr/reports")
 RMIRR_DIRPATH = os.path.expanduser("~/.rmirr")
-
-# globals
-allowdelete = False
-conf = None
-debug = False
-defaultsd = None
-destinations = None
-dry = False
-dryrsync = False
-mailreport = False
-mailto = None
-mirrors = None
-safemode = True
-showreport = False
-suitesd = None
-thishostname = None
-thisusername = None
-uselock = True
-verbose = False
-yes = False
 
 class RmirrException(Exception):
     pass
@@ -71,7 +53,7 @@ def do_mirror(mirrorpath, mirrors):
         sys.stderr.write("error: no match\n")
         return
     else:
-        if debug:
+        if globls.debug:
             print "debug: bestsrcpath (%s)" % (bestsrcpath,)
             print "debug: bestxsrcpath (%s)" % (bestxsrcpath,)
             print "debug: bestmirrord (%s)" % (bestmirrord,)
@@ -82,10 +64,10 @@ def do_mirror(mirrorpath, mirrors):
         name = bestmirrord.get("name", None)
         comment = bestmirrord.get("comment", None)
 
-        if mailto:
-            email_recipients = mailto
+        if globls.mailto:
+            email_recipients = globls.mailto
         else:
-            email_recipients = bestmirrord.get("email_recipients", defaultsd.get("email_recipients", None))
+            email_recipients = bestmirrord.get("email_recipients", globls.defaultsd.get("email_recipients", None))
             if type(email_recipients) != types.ListType:
                 email_recipients = []
 
@@ -95,16 +77,16 @@ def do_mirror(mirrorpath, mirrors):
             cmdargs.append("--exclude=%s" % s)
 
         # delete
-        if allowdelete:
+        if globls.allowdelete:
             cmdargs.append("--delete")
 
         # dry run
-        if dryrsync:
+        if globls.dryrsync:
             cmdargs.append("--dry-run")
 
         # validate source
         relpath = mirrorpath[len(bestsrcpath)+1:]
-        if safemode:
+        if globls.safemode:
             if mirrorpath != bestsrcpath:
                 if mirrorpath[len(bestsrcpath)] != "/" or relpath.startswith("/"):
                     print "warning: unexpected values for bestsrcpath (%s) and relpath (%s)" % (bestsrcpath, relpath)
@@ -122,27 +104,27 @@ def do_mirror(mirrorpath, mirrors):
 
         if os.path.isdir(mirrorpath):
             srcpath += "/"
-        srcuserhostpath = "%s@%s:%s" % (thisusername, thishostname, srcpath)
-        if debug:
+        srcuserhostpath = "%s@%s:%s" % (globls.thisusername, globls.thishostname, srcpath)
+        if globls.debug:
             print "debug: new srcuserhostpath (%s)" % (srcuserhostpath,)
 
-        if safemode:
+        if globls.safemode:
             if not srcuserhostpath.endswith("/"):
                 print "warning: srcuserhostpath (%s) does not end with '/'" % (srcuserhostpath,)
                 reply = raw_input("continue (y/n)? ")
                 if reply not in ["y"]:
                     return
 
-        if thisusername != srcuser:
-            print "warning: you (%s) do not match source user (%s)" % (thisusername, srcuser)
+        if globls.thisusername != srcuser:
+            print "warning: you (%s) do not match source user (%s)" % (globls.thisusername, srcuser)
             reply = raw_input("continue (y/n)? ")
-            if not yes and reply not in ["y"]:
+            if not globls.yes and reply not in ["y"]:
                 return
 
-        if thishostname != srchost:
-            print "warning: this host (%s) does not match source host (%s)" % (thishostname, srchost)
+        if globls.thishostname != srchost:
+            print "warning: this host (%s) does not match source host (%s)" % (globls.thishostname, srchost)
             reply = raw_input("continue (y/n)? ")
-            if not yes and reply not in ["y"]:
+            if not globls.yes and reply not in ["y"]:
                 return
 
         # use only srcpath part
@@ -159,7 +141,7 @@ def do_mirror(mirrorpath, mirrors):
             # provide dstuser if needed
             dstuser, dsthost, dstpath = userhostpath_split(dstuserhostpath)
             if dstuser == None:
-                dstuser = thisusername
+                dstuser = globls.thisusername
 
             # provide/ update dstpath
             if dstpath == None:
@@ -171,8 +153,8 @@ def do_mirror(mirrorpath, mirrors):
             # rebuild
             dstuserhostpath = "%s@%s:%s" % (dstuser, dsthost, dstpath)
 
-            if destinations and dsthost not in destinations:
-                if verbose:
+            if globls.destinations and dsthost not in globls.destinations:
+                if globls.verbose:
                     print "verbose: skipping destination (%s)" % (dsthost,)
                 continue
 
@@ -183,12 +165,12 @@ def do_mirror(mirrorpath, mirrors):
             print "sync from:        %s" % (srcuserhostpath,)
             print "sync to:          %s" % (dstuserhostpath,)
             print "excludes:         %s" % " ".join(excludes)
-            print "uselock:          %s" % str(uselock and "yes" or "no")
+            print "uselock:          %s" % str(globls.uselock and "yes" or "no")
             print "email recipients: %s" % " ".join(email_recipients)
-            if debug:
+            if globls.debug:
                 print xcmdargs
 
-            if not yes:
+            if not globls.yes:
                 reply = raw_input("execute (y/n/q)? ")
                 if reply == "q":
                     print "quitting"
@@ -198,7 +180,7 @@ def do_mirror(mirrorpath, mirrors):
                     continue
 
             print "running ..."
-            if dry:
+            if globls.dry:
                 print " ".join(xcmdargs)
             else:
                 try:
@@ -211,10 +193,10 @@ def do_mirror(mirrorpath, mirrors):
                     logger.info("from=%s" % srcuserhostpath)
                     logger.info("to=%s" % dstuserhostpath)
                     logger.info("excludes=%s" % " ".join(excludes))
-                    logger.info("uselock=%s" % str(uselock and "yes" or "no"))
+                    logger.info("uselock=%s" % str(globls.uselock and "yes" or "no"))
                     logger.info("email recipients=%s" % " ".join(email_recipients))
 
-                    if uselock:
+                    if globls.uselock:
                         try:
                             lockfd = os.open(os.path.join(LOCKS_DIRPATH, name), os.O_CREAT|os.O_WRONLY)
                             fcntl.lockf(lockfd, fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -235,7 +217,7 @@ def do_mirror(mirrorpath, mirrors):
                             stdout=repf, stderr=subprocess.STDOUT,
                             shell=False, close_fds=True)
 
-                        if showreport:
+                        if globls.showreport:
                             with open(report_path) as showf:
                                 while p.returncode == None:
                                     p.poll()
@@ -259,7 +241,7 @@ def do_mirror(mirrorpath, mirrors):
                         repf.close()
                     logger.info("done")
 
-            if mailreport:
+            if globls.mailreport:
                 try:
                     subject = "rmirr report for %s (%s)" % (name, os.path.basename(report_path))
                     sendreport(email_recipients, subject,
@@ -288,7 +270,7 @@ def find_mirror(mirrorpath, mirrors):
                     bestxsrcpath = xsrcpath
                     bestsrcpath = srcpath
                     bestmirrord = mirrord
-        if debug:
+        if globls.debug:
             print "debug: mirrorpath (%s) srcpath (%s) bestsrcpath (%s) bestxsrcpath (%s)" \
                 % (mirrorpath, srcpath, bestsrcpath, bestxsrcpath)
     return bestsrcpath, bestxsrcpath, bestmirrord
@@ -473,16 +455,11 @@ Options:
 -y      Do not ask for confirmation before executing.""" % d
 
 def main():
-    global allowdelete, conf, debug, defaultsd, destinations, \
-        dry, dryrsync, mailreport, mailto, mirrors, safemode, \
-        showreport, suitesd, thishostname, thisusername, \
-        uselock, verbose, yes
-
     progpath = os.path.realpath(sys.argv[0])
     libdir = os.path.realpath(os.path.dirname(progpath))
     etcdir = os.path.realpath(os.path.join(libdir, "../../etc/rmirr"))
-    thisusername = whoami()
-    thishostname = socket.getfqdn()
+    globls.thisusername = whoami()
+    globls.thishostname = socket.getfqdn()
 
     try:
         args = sys.argv[1:]
@@ -500,35 +477,35 @@ def main():
             elif arg == "-c" and args:
                 confpath = args.pop(0)
             elif arg == "-d" and args:
-                destinations = args.pop(0).split(",")
+                globls.destinations = args.pop(0).split(",")
             elif arg == "--debug":
-                debug = True
+                globls.debug = True
             elif arg == "--delete":
-                allowdelete = True
+                globls.allowdelete = True
             elif arg == "--dry":
-                dry = True
+                globls.dry = True
             elif arg == "--dry-rsync":
-                dryrsync = True
+                globls.dryrsync = True
             elif arg == "-l":
                 showlist = True
             elif arg == "--mailto" and args:
-                mailto = args.pop(0).split(",")
+                globls.mailto = args.pop(0).split(",")
             elif arg == "--mailreport":
-                mailreport = True
+                globls.mailreport = True
             elif arg == "--nolock":
-                uselock = False
+                globls.uselock = False
             elif arg == "-p" and args:
                 mirrorpath = os.path.normpath(args.pop(0))
             elif arg == "-s" and args:
                 suitename = args.pop(0)
             elif arg == "--safeoff":
-                safemode = False
+                globls.safemode = False
             elif arg == "--showreport":
-                showreport = True
+                globls.showreport = True
             elif arg == "--verbose":
-                verbose = True
+                globls.verbose = True
             elif arg == "-y":
-                yes = True
+                globls.yes = True
             else:
                 raise Exception()
 
@@ -554,24 +531,24 @@ def main():
 
     try:
         normalize = not showlist
-        conf = load_conf(confpath, normalize)
-        defaultsd = conf.get("defaults", {})
-        mirrors = conf.get("mirrors", [])
-        suitesd = conf.get("suites", {})
+        globls.conf = load_conf(confpath, normalize)
+        globls.defaultsd = globls.conf.get("defaults", {})
+        globls.mirrors = globls.conf.get("mirrors", [])
+        globls.suitesd = globls.conf.get("suites", {})
     except:
         #traceback.print_exc()
         sys.stderr.write("error: bad/missing configuration file\n")
         sys.exit(1)
 
     if showlist:
-        show_list(suitesd, mirrors)
+        show_list(globls.suitesd, globls.mirrors)
     elif suitename:
-        paths = suitesd.get(suitename)
+        paths = globls.suitesd.get(suitename)
         for path in paths:
             path = os.path.expanduser(path)
-            do_mirror(path, mirrors)
+            do_mirror(path, globls.mirrors)
     else:
-        do_mirror(mirrorpath, mirrors)
+        do_mirror(mirrorpath, globls.mirrors)
 
 if __name__ == "__main__":
     main()
