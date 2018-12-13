@@ -230,6 +230,16 @@ def do_mirror(mirrorpath, mirrors):
 
                         if p.returncode != 0:
                             print "warning: non-zero exit value (%s)" % (p.returncode,)
+
+                        if globls.mailreport:
+                            try:
+                                subject = "rmirr report for %s (%s)" % (name, os.path.basename(report_path))
+                                sendreport(email_recipients, subject,
+                                    name, srcuserhostpath, dstuserhostpath, excludes, report_path)
+                            except:
+                                #traceback.print_exc()
+                                logger.error("failed to send report")
+                                print "error: failed to send report"
                     except:
                         raise RmirrException("mirror failure")
                 except RmirrException as e:
@@ -240,16 +250,6 @@ def do_mirror(mirrorpath, mirrors):
                     if repf != None:
                         repf.close()
                     logger.info("done")
-
-            if globls.mailreport:
-                try:
-                    subject = "rmirr report for %s (%s)" % (name, os.path.basename(report_path))
-                    sendreport(email_recipients, subject,
-                        name, srcuserhostpath, dstuserhostpath, excludes, report_path)
-                except:
-                    traceback.print_exc()
-                    logger.error("failed to send report")
-                    print "error: failed to send report"
 
 def find_mirror(mirrorpath, mirrors):
     bestmirrord = None
