@@ -297,6 +297,13 @@ def load_conf(confpath, normalize):
         for i, userhostpath in enumerate(destinations):
              destinations[i] = userhostpath_normalize(userhostpath)
 
+    # validate
+    for mirrord in mirrors:
+        if "name" not in mirrord \
+            or "source" not in mirrord \
+            or "destinations" not in mirrord:
+            raise Exception("bad mirror definition")
+
     return conf
 
 def open_report():
