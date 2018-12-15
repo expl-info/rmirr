@@ -278,6 +278,19 @@ def find_mirror(mirrorpath, mirrors):
 def get_datetimestamp():
     return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
+def get_mirrorpath(mirrorname):
+    """Get mirrorpath served by mirrorname.
+
+    Note: source user and host information is ignored.
+    """
+    try:
+        for mirrord in globls.mirrors:
+            if mirrord["name"] == mirrorname:
+                _, mirrorpath = mirrord["source"].split(":", 1)
+                return mirrorpath
+    except:
+        pass
+
 def load_conf(confpath, normalize):
     """Load configuration file. Ensure that settings are normalized.
     """
@@ -424,13 +437,15 @@ def whoami():
 def print_usage():
     d = { "progname": os.path.basename(sys.argv[0]) }
     print """\
-usage: %(progname)s [<options>] (-p <path> | -s <suitename>)
+usage: %(progname)s [<options>] (-n <name> | -p <path> | -s <suitename>)
        %(progname)s -l
 
 Mirror file objects at <path>.
 
 Where:
 -l      List mirrorable paths.
+-n <name>
+        Mirror by mirror name.
 -p <path>
         Mirror path.
 -s <suitename>
@@ -473,6 +488,7 @@ def main():
         args = sys.argv[1:]
 
         confpath = os.path.join(os.path.expanduser("~/.rmirr"), "rmirr.json")
+        mirrorname = None
         mirrorpath = None
         showlist = False
         suitename = None
@@ -500,12 +516,20 @@ def main():
                 globls.mailto = args.pop(0).split(",")
             elif arg == "--mailreport":
                 globls.mailreport = True
+            elif arg == "-n" and args:
+                mirrorname = args.pop(0)
+                mirrorpath = None
+                suitename = None
             elif arg == "--nolock":
                 globls.uselock = False
             elif arg == "-p" and args:
                 mirrorpath = os.path.normpath(args.pop(0))
+                mirrorname = None
+                suitename = None
             elif arg == "-s" and args:
                 suitename = args.pop(0)
+                mirrorname = None
+                mirrorpath = None
             elif arg == "--safeoff":
                 globls.safemode = False
             elif arg == "--showreport":
@@ -522,7 +546,7 @@ def main():
             sys.exit(1)
 
         if not showlist:
-            if not mirrorpath and not suitename:
+            if not mirrorname and not mirrorpath and not suitename:
                 raise Exception()
     except SystemExit:
         raise
@@ -556,6 +580,12 @@ def main():
             path = os.path.expanduser(path)
             do_mirror(path, globls.mirrors)
     else:
+        if mirrorname:
+            mirrorpath = get_mirrorpath(mirrorname)
+            if mirrorpath == None:
+                sys.stderr.write("error: cannot find mirror name\n")
+                sys.exit(1)
+
         do_mirror(mirrorpath, globls.mirrors)
 
 if __name__ == "__main__":
