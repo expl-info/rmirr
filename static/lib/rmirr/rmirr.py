@@ -574,19 +574,24 @@ def main():
 
     if showlist:
         show_list(globls.suitesd, globls.mirrors)
-    elif suitename:
-        paths = globls.suitesd.get(suitename)
-        for path in paths:
-            path = os.path.expanduser(path)
-            do_mirror(path, globls.mirrors)
     else:
-        if mirrorname:
+        if suitename:
+            mirrorpaths = globls.suitesd.get(suitename)
+            if mirrorpaths == None:
+                sys.stderr.write("error: cannot find suite\n")
+                sys.exit(1)
+            mirrorpaths = map(os.path.expanduser, mirrorpaths)
+        elif mirrorname:
             mirrorpath = get_mirrorpath(mirrorname)
             if mirrorpath == None:
                 sys.stderr.write("error: cannot find mirror name\n")
                 sys.exit(1)
+            mirrorpaths = [mirrorpath]
+        else:
+            mirrorpaths = [mirrorpath]
 
-        do_mirror(mirrorpath, globls.mirrors)
+        for mirrorpath in mirrorpaths:
+            do_mirror(mirrorpath, globls.mirrors)
 
 if __name__ == "__main__":
     main()
