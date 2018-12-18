@@ -47,7 +47,14 @@ RMIRR_DIRPATH = os.path.expanduser("~/.rmirr")
 class RmirrException(Exception):
     pass
 
-def do_mirror(mirrorpath, mirrors):
+def do_mirror(mirrorname, mirrorpath, mirrors):
+    if mirrorname:
+        mirrord = get_mirror(mirrorname)
+        if not mirrord:
+            sys.stderr.write("error: cannot find mirror name\n")
+            return
+        mirrors = [mirrord]
+
     bestsrcpath, bestmirrord = find_mirror(mirrorpath, mirrors)
     if bestsrcpath == "":
         sys.stderr.write("error: no match\n")
@@ -270,16 +277,13 @@ def find_mirror(mirrorpath, mirrors):
 def get_datetimestamp():
     return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-def get_mirrorpath(mirrorname):
-    """Get mirrorpath served by mirrorname.
-
-    Note: source user and host information is ignored.
+def get_mirror(mirrorname):
+    """Get mirror served by mirrorname.
     """
     try:
         for mirrord in globls.mirrors:
             if mirrord["name"] == mirrorname:
-                _, mirrorpath = mirrord["source"].split(":", 1)
-                return mirrorpath
+                return mirrord
     except:
         pass
 
@@ -573,17 +577,11 @@ def main():
                 sys.stderr.write("error: cannot find suite\n")
                 sys.exit(1)
             mirrorpaths = map(os.path.expanduser, mirrorpaths)
-        elif mirrorname:
-            mirrorpath = get_mirrorpath(mirrorname)
-            if mirrorpath == None:
-                sys.stderr.write("error: cannot find mirror name\n")
-                sys.exit(1)
-            mirrorpaths = [mirrorpath]
         else:
             mirrorpaths = [mirrorpath]
 
         for mirrorpath in mirrorpaths:
-            do_mirror(mirrorpath, globls.mirrors)
+            do_mirror(mirrorname, mirrorpath, globls.mirrors)
 
 if __name__ == "__main__":
     main()
