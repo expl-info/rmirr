@@ -433,19 +433,23 @@ def whoami():
 def print_usage():
     d = { "progname": os.path.basename(sys.argv[0]) }
     print """\
-usage: %(progname)s [<options>] (-n <name> | -p <path> | -s <suitename>)
+usage: %(progname)s [<options>] [-n <name>] -p <path>
+       %(progname)s [<options>] [-n <name>] -s <suitename>
+       %(progname)s [<options>] -n <name>
        %(progname)s -l
 
-Mirror file objects at <path>.
+Mirror file objects which can be specified by <path> (for which a
+mirror is selected), <suite> (representing one or more paths), or
+<name> (a mirror configuration).
 
 Where:
--l      List mirrorable paths.
+-l      List mirror configurations.
 -n <name>
-        Mirror by mirror name.
+        Mirror name.
 -p <path>
         Mirror path.
 -s <suitename>
-        Mirror all paths belonging to a suite.
+        Alias for one or more paths.
 
 Options:
 -c <path>
@@ -514,17 +518,13 @@ def main():
                 globls.mailreport = True
             elif arg == "-n" and args:
                 mirrorname = args.pop(0)
-                mirrorpath = None
-                suitename = None
             elif arg == "--nolock":
                 globls.uselock = False
             elif arg == "-p" and args:
                 mirrorpath = os.path.normpath(args.pop(0))
-                mirrorname = None
                 suitename = None
             elif arg == "-s" and args:
                 suitename = args.pop(0)
-                mirrorname = None
                 mirrorpath = None
             elif arg == "--safeoff":
                 globls.safemode = False
